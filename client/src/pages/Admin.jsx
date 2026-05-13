@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FiLock, FiLogOut, FiPackage, FiClock, FiCheckCircle, FiTruck, FiDollarSign, FiTrash2, FiChevronDown, FiUsers, FiTrendingUp, FiBarChart2, FiXCircle, FiTag, FiPlus, FiMessageCircle } from 'react-icons/fi';
-import { getOrders, updateOrderStatus, deleteOrder, getOrderStats, getPromos, createPromo, deletePromo } from '../api/api';
+import { FiLock, FiLogOut, FiPackage, FiClock, FiCheckCircle, FiTruck, FiDollarSign, FiTrash2, FiChevronDown, FiUsers, FiTrendingUp, FiBarChart2, FiXCircle, FiTag, FiPlus, FiMessageCircle, FiEdit3 } from 'react-icons/fi';
+import { getOrders, updateOrderStatus, deleteOrder, getOrderStats, getPromos, createPromo, deletePromo, getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getMessages, getReservations, adminLogin, updateReservationStatus, deleteReservation } from '../api/api';
 
 const ADMIN_PASSWORD = '77002602KO';
 
@@ -22,24 +22,32 @@ export default function Admin() {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [promos, setPromos] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [activeTab, setActiveTab] = useState('orders');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [messages, setMessages] = useState([]);
+  const [reservations, setReservations] = useState([]);
+  const [editingMenuItem, setEditingMenuItem] = useState(null);
+  const [menuForm, setMenuForm] = useState({ name: '', price: '', category: 'pack', pieces: '', image: '', tag: '', emoji: '', description: '' });
 
   // Promo form state
   const [newPromoCode, setNewPromoCode] = useState('');
   const [newPromoDiscount, setNewPromoDiscount] = useState('');
 
-  const login = (e) => {
+  const login = async (e) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    try {
+      const res = await adminLogin(password);
+      localStorage.setItem('carmel_token', res.data.token);
       setAuthenticated(true);
       setPasswordError('');
       sessionStorage.setItem('admin_auth', 'true');
-    } else {
+    } catch (err) {
       setPasswordError('Mot de passe incorrect');
     }
   };
@@ -66,6 +74,18 @@ export default function Admin() {
       const promosRes = await getPromos();
       setPromos(promosRes.data || []);
     } catch { setPromos([]); }
+    try {
+      const menuRes = await getMenu();
+      setMenuItems(menuRes.data || []);
+    } catch { setMenuItems([]); }
+    try {
+      const msgRes = await getMessages();
+      setMessages(msgRes.data.messages || []);
+    } catch { setMessages([]); }
+    try {
+      const resRes = await getReservations();
+      setReservations(resRes.data.reservations || []);
+    } catch { setReservations([]); }
     setLoading(false);
   };
 
@@ -109,7 +129,28 @@ export default function Admin() {
   const logout = () => {
     setAuthenticated(false);
     sessionStorage.removeItem('admin_auth');
+    localStorage.removeItem('carmel_token');
     setPassword('');
+  };
+
+  const handleMenuSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const data = {
+        ...menuForm,
+        price: Number(menuForm.price),
+        pieces: menuForm.pieces ? Number(menuForm.pieces) : undefined,
+        items: menuForm.items_text ? menuForm.items_text.split(',').map(i => i.trim()) : []
+      };
+      if (editingMenuItem) {
+        await updateMenuItem(editingMenuItem._id, data);
+      } else {
+        await createMenuItem(data);
+      }
+      setMenuForm({ name: '', price: '', category: 'pack', pieces: '', image: '', tag: '', emoji: '', description: '', items_text: '' });
+      setEditingMenuItem(null);
+      fetchData();
+    } catch (err) { alert('Erreur lors de l\'enregistrement: ' + (err.response?.data?.error || err.message)); }
   };
 
   const filteredOrders = (filter === 'all' ? orders : orders.filter(o => o.status === filter))
@@ -170,6 +211,15 @@ export default function Admin() {
           <button className={`admin-nav-item ${activeTab === 'marketing' ? 'active' : ''}`} onClick={() => setActiveTab('marketing')}>
             <FiTag size={18} /> Marketing (Promos)
           </button>
+          <button className={`admin-nav-item ${activeTab === 'menu' ? 'active' : ''}`} onClick={() => setActiveTab('menu')}>
+            <FiEdit3 size={18} /> Gestion Menu
+          </button>
+          <button className={`admin-nav-item ${activeTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveTab('messages')}>
+            <FiMessageCircle size={18} /> Messages
+          </button>
+          <button className={`admin-nav-item ${activeTab === 'reservations' ? 'active' : ''}`} onClick={() => setActiveTab('reservations')}>
+            <FiClock size={18} /> Réservations
+          </button>
         </nav>
         <div className="admin-sidebar-footer">
           <button onClick={fetchData} className="admin-nav-item">🔄 Actualiser</button>
@@ -219,7 +269,32 @@ export default function Admin() {
                   </button>
                 ))}
               </div>
-              <input type="text" placeholder="🔍 Rechercher client, n° commande..." className="admin-search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button className="btn btn-outline" onClick={() => {
+                  const headers = ['N Commande', 'Client', 'Telephone', 'Total', 'Statut', 'Date'];
+                  const csv = [
+                    headers.join(','),
+                    ...orders.map(o => [
+                      o.orderNumber,
+                      `"${o.customerName}"`,
+                      o.customerPhone,
+                      o.totalPrice,
+                      o.status,
+                      new Date(o.createdAt).toLocaleDateString()
+                    ].join(','))
+                  ].join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.setAttribute('hidden', '');
+                  a.setAttribute('href', url);
+                  a.setAttribute('download', `commandes_${new Date().toLocaleDateString()}.csv`);
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}>📥 Exporter CSV</button>
+                <input type="text" placeholder="🔍 Rechercher client, n° commande..." className="admin-search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              </div>
             </div>
 
             {loading ? (
@@ -280,6 +355,11 @@ export default function Admin() {
                             <div className="admin-order-section">
                               <h4>📍 Livraison</h4>
                               <p>{order.customerAddress || 'Non renseignée'}</p>
+                              {order.locationUrl && (
+                                <a href={order.locationUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '0.5rem', padding: '0.3rem 0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '4px', textDecoration: 'none', border: '1px solid #10b981', fontSize: '0.9rem' }}>
+                                  📍 Voir sur la carte (GPS)
+                                </a>
+                              )}
                               <p style={{ marginTop: '0.5rem', color: 'var(--gold-400)' }}><FiClock /> {order.deliveryDate || "Aujourd'hui"} à {order.deliveryTime || "Dès que possible"}</p>
                               
                               <h4 style={{ marginTop: '1rem' }}>💳 Paiement</h4>
@@ -439,6 +519,142 @@ export default function Admin() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+        {/* MENU TAB */}
+        {activeTab === 'menu' && (
+          <div className="admin-menu-tab">
+            <h2 className="admin-tab-title"><FiEdit3 /> Gestion du Menu</h2>
+            
+            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+              <h3>{editingMenuItem ? 'Modifier' : 'Ajouter'} un article</h3>
+              <form onSubmit={handleMenuSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <input className="form-input" placeholder="Nom" required value={menuForm.name} onChange={e => setMenuForm({...menuForm, name: e.target.value})} />
+                <input className="form-input" type="number" placeholder="Prix (F)" required value={menuForm.price} onChange={e => setMenuForm({...menuForm, price: e.target.value})} />
+                <select className="form-input" value={menuForm.category} onChange={e => setMenuForm({...menuForm, category: e.target.value})}>
+                  <option value="pack">Pack</option>
+                  <option value="canape">Individuel (Canapé)</option>
+                </select>
+                <input className="form-input" placeholder="Nombre de pièces (pour packs)" value={menuForm.pieces} onChange={e => setMenuForm({...menuForm, pieces: e.target.value})} />
+                <input className="form-input" placeholder="Lien image" value={menuForm.image} onChange={e => setMenuForm({...menuForm, image: e.target.value})} />
+                <input className="form-input" placeholder="Tag (ex: Best-seller)" value={menuForm.tag} onChange={e => setMenuForm({...menuForm, tag: e.target.value})} />
+                <input className="form-input" placeholder="Emoji (ex: 🥟)" value={menuForm.emoji} onChange={e => setMenuForm({...menuForm, emoji: e.target.value})} />
+                <input className="form-input" placeholder="Composants (séparés par virgules)" value={menuForm.items_text || ''} onChange={e => setMenuForm({...menuForm, items_text: e.target.value})} />
+                <input className="form-input" style={{ gridColumn: '1 / -1' }} placeholder="Description" value={menuForm.description} onChange={e => setMenuForm({...menuForm, description: e.target.value})} />
+                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="btn btn-primary">{editingMenuItem ? 'Mettre à jour' : 'Créer l\'article'}</button>
+                  {editingMenuItem && <button type="button" className="btn btn-outline" onClick={() => { setEditingMenuItem(null); setMenuForm({ name: '', price: '', category: 'pack', pieces: '', image: '', tag: '', emoji: '', description: '' }); }}>Annuler</button>}
+                </div>
+              </form>
+            </div>
+
+            <div className="admin-orders">
+              {menuItems.map(item => (
+                <div key={item._id} className="admin-order-card" style={{ padding: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      {item.emoji && <span style={{ fontSize: '1.5rem' }}>{item.emoji}</span>}
+                      {item.image && <img src={item.image} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />}
+                      <div>
+                        <strong>{item.name}</strong>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{item.category === 'pack' ? '📦 Pack' : '🥟 Individuel'} · {item.price.toLocaleString()} F</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button className="admin-status-btn" style={{ borderColor: 'var(--gold-400)', color: 'var(--gold-400)' }}
+                        onClick={() => {
+                          setEditingMenuItem(item);
+                          setMenuForm({ ...item, items_text: item.items?.join(', ') || '' });
+                          window.scrollTo(0,0);
+                        }}>
+                        <FiEdit3 /> Modifier
+                      </button>
+                      <button className="admin-status-btn" style={{ borderColor: item.isAvailable ? '#10b981' : '#ef4444', color: item.isAvailable ? '#10b981' : '#ef4444' }}
+                        onClick={async () => {
+                          await updateMenuItem(item._id, { isAvailable: !item.isAvailable });
+                          fetchData();
+                        }}>
+                        {item.isAvailable ? 'En stock' : 'Rupture'}
+                      </button>
+                      <button className="admin-delete-btn" onClick={async () => {
+                        if (window.confirm('Supprimer cet article ?')) {
+                          await deleteMenuItem(item._id);
+                          fetchData();
+                        }
+                      }}><FiTrash2 /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* MESSAGES TAB */}
+        {activeTab === 'messages' && (
+          <div className="admin-messages-tab">
+            <h2 className="admin-tab-title"><FiMessageCircle /> Messages Clients</h2>
+            <div className="admin-orders">
+              {messages.length === 0 ? <p>Aucun message</p> : messages.map(msg => (
+                <div key={msg._id} className="admin-order-card" style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <strong>{msg.name} ({msg.email})</strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(msg.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p style={{ fontStyle: 'italic' }}>"{msg.message}"</p>
+                  <div style={{ marginTop: '1rem' }}>
+                    <a href={`mailto:${msg.email}`} className="btn btn-outline" style={{ padding: '0.3rem 0.8rem', fontSize: '0.8rem' }}>Répondre</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* RESERVATIONS TAB */}
+        {activeTab === 'reservations' && (
+          <div className="admin-reservations-tab">
+            <h2 className="admin-tab-title"><FiClock /> Réservations de Menus</h2>
+            <div className="admin-orders">
+              {reservations.length === 0 ? <p>Aucune réservation</p> : reservations.map(res => (
+                <div key={res._id} className="admin-order-card" style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <strong style={{ fontSize: '1.1rem' }}>{res.name}</strong>
+                        <span className="admin-order-status" style={{ 
+                          background: res.status === 'confirmed' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', 
+                          color: res.status === 'confirmed' ? '#10b981' : '#f59e0b',
+                          fontSize: '0.75rem'
+                        }}>
+                          {res.status === 'confirmed' ? 'Confirmée' : 'En attente'}
+                        </span>
+                      </div>
+                      <p style={{ margin: '0.2rem 0', color: 'var(--text-secondary)' }}>📞 {res.phone}</p>
+                      <p style={{ margin: '0.2rem 0', fontWeight: '500', color: 'var(--gold-400)' }}>🍱 Menu : {res.guests}</p>
+                      <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}>🗓️ Prévu le {res.date} à {res.time}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.8rem' }}>
+                      {res.status !== 'confirmed' && (
+                        <button className="admin-status-btn" style={{ borderColor: '#10b981', color: '#10b981' }}
+                          onClick={async () => {
+                            await updateReservationStatus(res._id, 'confirmed');
+                            fetchData();
+                          }}>
+                          <FiCheckCircle /> Confirmer
+                        </button>
+                      )}
+                      <button className="admin-delete-btn" onClick={async () => {
+                        if (window.confirm('Supprimer cette réservation ?')) {
+                          await deleteReservation(res._id);
+                          fetchData();
+                        }
+                      }}><FiTrash2 /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

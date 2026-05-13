@@ -11,6 +11,7 @@ function generateOrderNumber() {
 
 const orderSchema = new mongoose.Schema({
   orderNumber: { type: String, default: generateOrderNumber, unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   customerName: { type: String, required: true },
   customerPhone: { type: String, required: true },
   customerAddress: { type: String, required: true },
@@ -29,6 +30,9 @@ const orderSchema = new mongoose.Schema({
   paymentStatus: { type: String, default: 'pending', enum: ['pending', 'paid'] },
   promoCode: { type: String },
   discountAmount: { type: Number, default: 0 },
+  locationUrl: { type: String },
+  pointsEarned: { type: Number, default: 0 },
+  pointsUsed: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

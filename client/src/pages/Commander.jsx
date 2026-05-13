@@ -2,28 +2,75 @@ import { useState, useEffect } from 'react';
 import { FiMinus, FiPlus, FiTrash2, FiSend, FiCheckCircle, FiPhone, FiClock, FiMapPin, FiCreditCard, FiTag } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { createOrder, validatePromo } from '../api/api';
+import { createOrder, validatePromo, trackOrder } from '../api/api';
 import ScrollReveal from '../components/ScrollReveal';
+import { useAuth } from '../context/AuthContext';
 
 export default function Commander() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalPrice, showToast } = useCart();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
-    name: '', phone: '', address: '', notes: '',
+    name: user?.name || '', phone: user?.phone || '', address: user?.addresses?.[0] || '', notes: '',
     deliveryDate: 'Aujourd\'hui', deliveryTime: 'Dès que possible',
     paymentMethod: 'cash'
   });
+  
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        phone: prev.phone || user.phone || '',
+        address: prev.address || user.addresses?.[0] || ''
+      }));
+    }
+  }, [user]);
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0); // percentage
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
 
   const [sending, setSending] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
   const [showMobileMoney, setShowMobileMoney] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [locationUrl, setLocationUrl] = useState(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
+
+  // Polling for live tracking
+  useEffect(() => {
+    let intervalId;
+    if (orderResult && orderResult.success && orderResult.order) {
+      const orderNumber = orderResult.order.orderNumber;
+      
+      const fetchStatus = async () => {
+        try {
+          const res = await trackOrder(orderNumber);
+          if (res.data.success && res.data.order) {
+            setOrderResult(prev => ({
+              ...prev,
+              order: { ...prev.order, status: res.data.order.status }
+            }));
+          }
+        } catch (err) {
+          console.error("Tracking error:", err);
+        }
+      };
+
+      const currentStatus = orderResult.order.status;
+      if (['pending', 'confirmed', 'preparing'].includes(currentStatus)) {
+        intervalId = setInterval(fetchStatus, 5000); // Poll every 5 seconds for faster demo
+      }
+    }
+    return () => clearInterval(intervalId);
+  }, [orderResult?.order?.orderNumber, orderResult?.order?.status]);
 
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
   const discountAmount = Math.floor(totalPrice * (discount / 100));
-  const finalPrice = totalPrice - discountAmount;
+  const pointsDiscount = usePoints ? Math.min(Math.floor((user?.points || 0) / 100) * 500, totalPrice - discountAmount) : 0;
+  const finalPrice = Math.max(0, totalPrice - discountAmount - pointsDiscount);
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
@@ -42,14 +89,73 @@ export default function Commander() {
     setApplyingPromo(false);
   };
 
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+    setGettingLocation(true);
+    
+    const options = {
+      enableHighAccuracy: false, // Souvent source de timeout sur PC
+      timeout: 15000,           // Timeout allongé à 15s
+      maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationUrl(`https://www.google.com/maps?q=${latitude},${longitude}`);
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.error("Erreur GPS détaillée:", error);
+        let msg = "Impossible d'obtenir votre position. ";
+        if (error.code === 1) msg += "Vous avez refusé l'accès à la localisation.";
+        else if (error.code === 2) msg += "Position indisponible (réseau/GPS désactivé).";
+        else if (error.code === 3) msg += "Délai d'attente dépassé.";
+        
+        alert(msg + " Veuillez vérifier vos paramètres ou saisir votre adresse manuellement.");
+        setGettingLocation(false);
+      },
+      options
+    );
+  };
+
+  const getWhatsAppLink = (orderRes) => {
+    const phone = "2250103717078";
+    if (!orderRes) return `https://wa.me/${phone}`;
+    
+    let text = `*NOUVELLE COMMANDE : ${orderRes.order?.orderNumber || ''}*\n\n`;
+    text += `*Client:* ${orderRes.customerName}\n`;
+    text += `*Téléphone:* ${orderRes.customerPhone}\n`;
+    text += `*Adresse:* ${orderRes.customerAddress}\n\n`;
+    text += `*Commande:*\n`;
+    orderRes.items.forEach(item => {
+      text += `- ${item.quantity}x ${item.name} (${(item.price * item.quantity).toLocaleString()} F)\n`;
+    });
+    if (orderRes.discountAmount > 0) {
+      text += `\n*Réduction:* -${orderRes.discountAmount.toLocaleString()} F\n`;
+    }
+    text += `\n*Total Payé:* ${orderRes.total.toLocaleString()} F\n\n`;
+    text += `*Livraison:* ${orderRes.deliveryDate} à ${orderRes.deliveryTime}\n`;
+    text += `*Paiement:* ${orderRes.paymentMethod === 'mobile_money' ? 'Payé (Mobile Money)' : 'À payer à la livraison'}`;
+    if (orderRes.notes) {
+      text += `\n\n*Notes:* ${orderRes.notes}`;
+    }
+    
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  };
+
   const handleConfirmOrder = async () => {
     if (cart.length === 0) return;
     setSending(true);
     
     const orderData = {
+      userId: user?._id || user?.id || null,
       customerName: formData.name,
       customerPhone: formData.phone,
-      customerAddress: formData.address,
+      customerAddress: formData.address.trim() || (locationUrl ? "📍 Position GPS capturée (voir lien)" : ""),
       notes: formData.notes,
       items: cart.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, desc: i.desc || '' })),
       totalPrice: finalPrice,
@@ -58,32 +164,39 @@ export default function Commander() {
       paymentMethod: formData.paymentMethod,
       paymentStatus: formData.paymentMethod === 'mobile_money' ? 'paid' : 'pending',
       promoCode: discount > 0 ? promoCode : null,
-      discountAmount
+      discountAmount,
+      locationUrl,
+      pointsUsed: usePoints ? Math.floor(pointsDiscount / 500) * 100 : 0
     };
 
     try {
       const res = await createOrder(orderData);
-      setOrderResult({
+      const newOrderResult = {
         success: true,
         order: res.data.order,
         ...orderData,
         items: [...cart],
         total: finalPrice,
-      });
+      };
+      setOrderResult(newOrderResult);
       clearCart();
     } catch (err) {
-      setOrderResult({
-        success: false,
-        customerName: formData.name,
-        items: [...cart],
-        total: finalPrice,
-      });
+      console.error("Erreur de commande complète:", err);
+      const errorMsg = err.response?.data?.error || err.message;
+      alert(`⚠️ Erreur lors de l'envoi : ${errorMsg}\n\nVérifiez que votre serveur est bien lancé sur le port 5000.`);
+      setSending(false);
+      return; // Ne pas afficher l'écran de résultat si ça a échoué
     }
     setSending(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!locationUrl && !formData.address.trim()) {
+      alert("Veuillez soit capturer votre position exacte, soit renseigner votre adresse de livraison manuellement.");
+      setShowAddress(true);
+      return;
+    }
     if (formData.paymentMethod === 'mobile_money') {
       setShowMobileMoney(true);
     } else {
@@ -187,29 +300,44 @@ export default function Commander() {
                 </div>
 
                 <div className="confirmation-steps">
-                  <h3>🔔 Prochaines étapes</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0 }}>🔔 Suivi en temps réel</h3>
+                    {order && ['pending', 'confirmed', 'preparing'].includes(order.status) && (
+                      <span style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }}></span>
+                        Mise à jour auto...
+                      </span>
+                    )}
+                  </div>
                   <div className="step-list">
-                    <div className="step active">
+                    <div className={`step ${['pending', 'confirmed', 'preparing', 'delivered'].includes(order?.status || 'pending') ? 'active' : ''}`}>
                       <div className="step-dot" />
-                      <div><strong>Commande reçue</strong><span>Maintenant</span></div>
+                      <div><strong>Commande reçue</strong><span>{order?.status === 'pending' ? 'En attente de validation...' : 'Validée par le système'}</span></div>
                     </div>
-                    <div className="step">
+                    <div className={`step ${['confirmed', 'preparing', 'delivered'].includes(order?.status) ? 'active' : ''}`}>
                       <div className="step-dot" />
-                      <div><strong>Confirmation par téléphone</strong><span>Sous 15 minutes</span></div>
+                      <div><strong>Confirmation restaurant</strong><span>{['preparing', 'delivered'].includes(order?.status) ? 'Nous avons confirmé votre commande' : 'En attente de confirmation'}</span></div>
                     </div>
-                    <div className="step">
+                    <div className={`step ${['preparing', 'delivered'].includes(order?.status) ? 'active' : ''}`}>
                       <div className="step-dot" />
-                      <div><strong>Préparation de votre commande</strong><span>Selon votre horaire</span></div>
+                      <div><strong>Préparation en cuisine</strong><span>{order?.status === 'delivered' ? 'Terminée' : (order?.status === 'preparing' ? 'Vos plats sont en cours de préparation' : 'Bientôt en préparation')}</span></div>
                     </div>
-                    <div className="step">
+                    <div className={`step ${['delivered'].includes(order?.status) ? 'active' : ''}`}>
                       <div className="step-dot" />
-                      <div><strong>Livraison à votre porte</strong><span>À temps</span></div>
+                      <div><strong>Prête / Livrée</strong><span>{order?.status === 'delivered' ? 'Commande terminée ! Bon appétit !' : 'À venir...'}</span></div>
                     </div>
                   </div>
+                  <style>{`
+                    @keyframes pulse {
+                      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+                      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+                    }
+                  `}</style>
                 </div>
 
                 <div className="confirmation-actions">
-                  <a href={`https://wa.me/2250371707078?text=Bonjour, je viens de passer la commande ${order?.orderNumber || ''}`} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+                  <a href={getWhatsAppLink(orderResult)} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
                     💬 Nous écrire sur WhatsApp
                   </a>
                   <Link to="/menu" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>
@@ -300,6 +428,26 @@ export default function Commander() {
                     </div>
                   </div>
 
+                  {/* LOYALTY POINTS */}
+                  {user && user.points >= 100 && (
+                    <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(212,168,67,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(212,168,67,0.2)' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--gold-400)' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={usePoints} 
+                          onChange={(e) => setUsePoints(e.target.checked)}
+                          style={{ width: '18px', height: '18px', accentColor: 'var(--gold-primary)' }}
+                        />
+                        Utiliser mes points ({user.points} pts dispo)
+                      </label>
+                      {usePoints && (
+                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                          Réduction appliquée : <strong>-{pointsDiscount.toLocaleString()} F</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="order-total" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                       <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Sous-total</span>
@@ -309,6 +457,12 @@ export default function Commander() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10b981' }}>
                         <span style={{ fontSize: '1rem' }}>Réduction ({discount}%)</span>
                         <span style={{ fontSize: '1rem' }}>-{discountAmount.toLocaleString()} F</span>
+                      </div>
+                    )}
+                    {pointsDiscount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--gold-400)' }}>
+                        <span style={{ fontSize: '1rem' }}>Points de fidélité</span>
+                        <span style={{ fontSize: '1rem' }}>-{pointsDiscount.toLocaleString()} F</span>
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
@@ -325,6 +479,14 @@ export default function Commander() {
                   <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem' }}>
                     📋 Vos Informations
                   </h2>
+                  
+                  {!user && (
+                    <div style={{ background: 'rgba(200,152,46,0.1)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--gold-400)' }}>Déjà client ? Connectez-vous pour récupérer vos adresses.</span>
+                      <Link to="/auth" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Se connecter</Link>
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit}>
                     <div className="form-group">
                       <label className="form-label">Nom Complet</label>
@@ -334,10 +496,49 @@ export default function Commander() {
                       <label className="form-label">Téléphone</label>
                       <input className="form-input" required placeholder="+225 XX XX XX XX" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Adresse de Livraison</label>
-                      <textarea className="form-input" required placeholder="Votre adresse complète (Gonzagueville et environs)" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={{ minHeight: '60px' }} />
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        Localisation
+                      </label>
+                      <button 
+                        type="button" 
+                        onClick={handleGetLocation} 
+                        className="btn" 
+                        style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '1rem', fontSize: '1rem', background: locationUrl ? 'rgba(16, 185, 129, 0.1)' : 'var(--blue-primary)', color: locationUrl ? '#10b981' : 'var(--white)', border: `1px solid ${locationUrl ? '#10b981' : 'var(--glass-border)'}`, borderRadius: '50px' }}
+                        disabled={gettingLocation}
+                      >
+                        <FiMapPin /> {gettingLocation ? 'Recherche en cours...' : (locationUrl ? 'Position Capturée ✅' : 'Obtenir ma position exacte')}
+                      </button>
+                      {locationUrl && <p style={{ fontSize: '0.85rem', color: '#10b981', marginTop: '0.5rem', textAlign: 'center' }}>✓ Position GPS enregistrée pour la livraison</p>}
                     </div>
+
+                    {user && user.addresses?.length > 0 && (
+                      <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                        <label className="form-label">Sélectionner une adresse enregistrée</label>
+                        <select className="form-input" onChange={e => {
+                          if (e.target.value) {
+                            setFormData({ ...formData, address: e.target.value });
+                            setShowAddress(true);
+                          }
+                        }}>
+                          <option value="">-- Choisir une adresse --</option>
+                          {user.addresses.map((addr, i) => (
+                            <option key={i} value={addr}>{addr}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', marginBottom: showAddress ? '0' : '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                      <input type="checkbox" id="showAddressCheckbox" checked={showAddress} onChange={(e) => setShowAddress(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--gold-primary)' }} />
+                      <label htmlFor="showAddressCheckbox" className="form-label" style={{ cursor: 'pointer', margin: 0, fontSize: '0.9rem' }}>Je souhaite préciser des détails d'adresse</label>
+                    </div>
+
+                    {showAddress && (
+                      <div className="form-group" style={{ animation: 'fadeInUp 0.3s ease' }}>
+                        <textarea className="form-input" placeholder="Ex: Portail bleu, à côté de la pharmacie, appartement 3..." value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={{ minHeight: '80px' }} />
+                      </div>
+                    )}
 
                     <h3 style={{ fontSize: '1.1rem', color: 'var(--gold-400)', marginTop: '2rem', marginBottom: '1rem' }}>⏰ Planification</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

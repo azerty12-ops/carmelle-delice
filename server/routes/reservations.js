@@ -19,4 +19,22 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const reservation = await Reservation.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+    res.json({ success: true, reservation });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    await Reservation.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

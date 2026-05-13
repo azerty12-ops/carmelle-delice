@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { FiMapPin, FiPhone, FiMail, FiClock, FiSend } from 'react-icons/fi';
-import { sendMessage } from '../api/api';
+import { FiMapPin, FiPhone, FiMail, FiClock, FiSend, FiCalendar, FiUsers } from 'react-icons/fi';
+import { sendMessage, createReservation } from '../api/api';
 import { useCart } from '../context/CartContext';
 import ScrollReveal from '../components/ScrollReveal';
 
 const infos = [
   { icon: <FiMapPin size={28} />, title: 'Adresse', lines: ['Port Bouet, Gonzagueville', 'Abidjan, Côte d\'Ivoire'] },
-  { icon: <FiPhone size={28} />, title: 'Téléphone', lines: ['+225 03 71 70 78'], link: 'tel:+2250371707078' },
+  { icon: <FiPhone size={28} />, title: 'Téléphone', lines: ['+225 01 03 71 70 78'], link: 'tel:+2250103717078' },
   { icon: <FiMail size={28} />, title: 'Email', lines: ['carmeldelice7@gmail.com'], link: 'mailto:carmeldelice7@gmail.com' },
   { icon: <FiClock size={28} />, title: 'Horaires', lines: ['Lun – Dim : 08h30 – 20h30', 'Ouvert tous les jours'] },
 ];
@@ -16,7 +16,7 @@ export default function Contact() {
   const [sent, setSent] = useState(false);
   const { showToast } = useCart();
 
-  const handleSubmit = async (e) => {
+  const handleMessageSubmit = async (e) => {
     e.preventDefault();
     try { await sendMessage(form); } catch {}
     showToast('✅ Message envoyé !');
@@ -37,7 +37,6 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* INFO CARDS */}
       <section className="section-padding" style={{ background: 'var(--navy-800)' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '5rem' }}>
@@ -54,16 +53,16 @@ export default function Contact() {
             ))}
           </div>
 
-          {/* CONTACT FORM */}
           <ScrollReveal>
             <div style={{ maxWidth: '700px', margin: '0 auto' }}>
               <div className="section-header">
                 <span className="section-tag">Écrivez-Nous</span>
-                <h2 className="section-title">Envoyer un Message</h2>
+                <h2 className="section-title">Envoyer un <span className="text-gold">Message</span></h2>
                 <div className="section-line" />
               </div>
+              
               <div className="glass-card" style={{ padding: '2.5rem' }}>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleMessageSubmit}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <div className="form-group">
                       <label className="form-label">Nom</label>

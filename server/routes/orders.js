@@ -1,10 +1,25 @@
 const router = require('express').Router();
 const Order = require('../models/Order');
+const User = require('../models/User');
+const { auth } = require('./users');
 
 // Create order
 router.post('/', async (req, res) => {
   try {
-    const order = await Order.create(req.body);
+    const orderData = { ...req.body };
+    
+    // Si l'utilisateur utilise des points
+    if (orderData.userId && orderData.pointsUsed > 0) {
+      const user = await User.findById(orderData.userId);
+      if (user && user.points >= orderData.pointsUsed) {
+        user.points -= orderData.pointsUsed;
+        await user.save();
+      } else {
+        orderData.pointsUsed = 0; // Sécurité si l'utilisateur n'a pas assez de points
+      }
+    }
+
+    const order = await Order.create(orderData);
     res.status(201).json({ success: true, order });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -79,6 +94,16 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// Get my orders (protected)
+router.get('/my-orders', auth, async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.json({ success: true, orders });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Get all orders
 router.get('/', async (req, res) => {
   try {
@@ -92,12 +117,23 @@ router.get('/', async (req, res) => {
 // Update order status
 router.patch('/:id/status', async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    );
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ success: false, error: 'Commande non trouvée' });
+
+    const prevStatus = order.status;
+    order.status = status;
+    await order.save();
+
+    // Logique des points : 10 points fixes par commande livrée
+    if (status === 'delivered' && prevStatus !== 'delivered' && order.userId) {
+      const pointsEarned = 10;
+      order.pointsEarned = pointsEarned;
+      await order.save();
+      
+      await User.findByIdAndUpdate(order.userId, { $inc: { points: pointsEarned } });
+    }
+
     res.json({ success: true, order });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -111,6 +147,17 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// Track order by orderNumber
+router.get('/track/:orderNumber', async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+    if (!order) return res.status(404).json({ success: false, error: 'Commande non trouvée' });
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

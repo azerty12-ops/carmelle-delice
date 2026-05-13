@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiFacebook, FiInstagram, FiPhone } from 'react-icons/fi';
+import { FaTiktok } from 'react-icons/fa';
 
 export default function Footer() {
   return (
@@ -10,11 +11,12 @@ export default function Footer() {
             <Link to="/" className="nav-logo" style={{ fontSize: '1.8rem' }}>
               Carmel <span>Délice</span>
             </Link>
-            <p>Street food & canapés chauds artisanaux à Port Bouet Gonzagueville. Des saveurs uniques livrées chez vous.</p>
+            <p>Street food & canapés chauds artisanaux. Livraison partout à Abidjan. Suivez-nous sur nos réseaux pour ne rien manquer !</p>
             <div className="footer-socials">
               <a href="#" className="social-link" aria-label="Facebook"><FiFacebook /></a>
-              <a href="#" className="social-link" aria-label="Instagram"><FiInstagram /></a>
-              <a href="tel:+2250371707078" className="social-link" aria-label="Téléphone"><FiPhone /></a>
+              <a href="https://www.instagram.com/carmel_delice_/" target="_blank" rel="noreferrer" className="social-link" aria-label="Instagram"><FiInstagram /></a>
+              <a href="https://www.tiktok.com/@carmel.delice" target="_blank" rel="noreferrer" className="social-link" aria-label="TikTok"><FaTiktok /></a>
+              <a href="tel:+2250103717078" className="social-link" aria-label="Téléphone"><FiPhone /></a>
             </div>
           </div>
           <div className="footer-col">
@@ -37,10 +39,10 @@ export default function Footer() {
           <div className="footer-col">
             <h4>Contact</h4>
             <ul>
-              <li><a href="tel:+2250371707078">+225 03 71 70 78</a></li>
+              <li><a href="tel:+2250103717078">+225 01 03 71 70 78</a></li>
               <li><a href="mailto:carmeldelice7@gmail.com">carmeldelice7@gmail.com</a></li>
               <li><span>Port Bouet, Gonzagueville</span></li>
-              <li><a href="https://wa.me/2250371707078" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-400)' }}>💬 WhatsApp</a></li>
+              <li><a href="https://wa.me/2250103717078" target="_blank" rel="noreferrer" style={{ color: 'var(--gold-400)' }}>💬 WhatsApp</a></li>
             </ul>
           </div>
         </div>
