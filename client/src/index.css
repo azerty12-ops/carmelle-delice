@@ -108,7 +108,7 @@ h1,h2,h3,h4,h5 { font-family: var(--font-heading); line-height: 1.2; }
 
 /* ===== NAVBAR ===== */
 .navbar {
-  position: fixed; top: 0; width: 100%; z-index: 1000;
+  position: relative; width: 100%; z-index: 1000;
   padding: 1.2rem 0; transition: var(--transition);
 }
 .navbar.scrolled {

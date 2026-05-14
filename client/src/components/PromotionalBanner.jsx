@@ -39,8 +39,7 @@ export default function PromotionalBanner() {
           font-size: 0.85rem;
           font-weight: 600;
           overflow: hidden;
-          position: sticky;
-          top: 0;
+          position: relative;
           z-index: 2000;
           box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }

@@ -36,8 +36,12 @@ function Layout() {
   return (
     <>
       <ScrollToTop />
-      {!isAdmin && <PromotionalBanner />}
-      {!isAdmin && <Navbar />}
+      {!isAdmin && (
+        <header style={{ position: 'sticky', top: 0, zIndex: 2000 }}>
+          <PromotionalBanner />
+          <Navbar />
+        </header>
+      )}
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
