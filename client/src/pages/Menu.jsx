@@ -76,21 +76,21 @@ export default function Menu() {
       <section className="section-padding" style={{ background: 'var(--navy-800)' }}>
         <div className="container">
           <ScrollReveal>
-            <div className="menu-tabs">
+            <div className="category-bar menu-tabs">
               <button
-                className={`menu-tab ${tab === 'packs' ? 'active' : ''}`}
+                className={`category-chip menu-tab ${tab === 'packs' ? 'active' : ''}`}
                 onClick={() => setTab('packs')}
               >
                 <FiPackage style={{ marginRight: 8 }} /> Nos Packs
               </button>
               <button
-                className={`menu-tab ${tab === 'plats' ? 'active' : ''}`}
+                className={`category-chip menu-tab ${tab === 'plats' ? 'active' : ''}`}
                 onClick={() => setTab('plats')}
               >
                 <FiShoppingBag style={{ marginRight: 8 }} /> Nos Plats
               </button>
               <button
-                className={`menu-tab ${tab === 'custom' ? 'active' : ''}`}
+                className={`category-chip menu-tab ${tab === 'custom' ? 'active' : ''}`}
                 onClick={() => setTab('custom')}
               >
                 <FiEdit3 style={{ marginRight: 8 }} /> Box Personnalisée
