@@ -46,8 +46,8 @@ export default function Home() {
   return (
     <>
       {/* GLOVO-STYLE CATEGORIES STRIP */}
-      <div style={{ background: 'var(--navy-900)', paddingTop: '90px', paddingBottom: '2rem', paddingLeft: '5%', paddingRight: '5%', overflowX: 'auto', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', scrollbarWidth: 'none' }}>
-        <div style={{ display: 'flex', gap: '2rem', minWidth: 'max-content', margin: '0 auto', justifyContent: 'center' }}>
+      <div style={{ background: 'var(--navy-900)', paddingTop: '10px', paddingBottom: '1rem', overflowX: 'auto', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(255,255,255,0.05)', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', gap: '1.5rem', minWidth: 'max-content', padding: '0 5%', justifyContent: 'center' }}>
         {[
           { img: '/images/burgers.png', name: 'Burgers' },
           { img: '/images/pizzas.png', name: 'Pizzas' },
@@ -57,11 +57,11 @@ export default function Home() {
           { img: '/images/chef.png', name: 'Packs' },
           { img: '/images/streetfood.png', name: 'Box' }
         ].map(cat => (
-          <Link to="/menu" key={cat.name} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', color: 'var(--white)', textDecoration: 'none', transition: 'transform 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--glass-border)', boxShadow: '0 8px 20px rgba(0,0,0,0.3)', padding: '2px', background: 'var(--blue-primary)' }}>
-              <img src={cat.img} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          <Link to="/menu" key={cat.name} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: 'var(--white)', textDecoration: 'none' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--glass-border)', background: 'var(--blue-primary)' }}>
+              <img src={cat.img} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <span style={{ fontSize: '0.95rem', fontWeight: '600' }}>{cat.name}</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>{cat.name}</span>
           </Link>
         ))}
       </div>
@@ -78,10 +78,10 @@ export default function Home() {
           </p>
           
           {/* GLOVO-STYLE SEARCH / ADDRESS BAR */}
-          <div style={{ background: 'var(--white)', padding: '0.5rem', borderRadius: '50px', display: 'flex', alignItems: 'center', maxWidth: '600px', margin: '0 auto 2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
-            <span style={{ padding: '0 1rem', color: 'var(--blue-deep)', fontSize: '1.2rem' }}>📍</span>
-            <input type="text" placeholder="Saisissez votre adresse de livraison..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: '1rem', padding: '0.5rem', color: 'var(--blue-deep)', fontFamily: 'var(--font-body)' }} />
-            <Link to="/menu" className="btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '50px', margin: 0 }}>Chercher</Link>
+          <div style={{ background: 'var(--white)', padding: '0.3rem', borderRadius: '50px', display: 'flex', alignItems: 'center', maxWidth: '90%', margin: '0 auto 1.5rem', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+            <span style={{ padding: '0 0.5rem', color: 'var(--blue-deep)' }}>📍</span>
+            <input type="text" placeholder="Adresse..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.9rem', padding: '0.5rem', color: 'var(--blue-deep)', width: '50px' }} />
+            <Link to="/menu" className="btn-primary" style={{ padding: '0.6rem 1rem', borderRadius: '50px', margin: 0, fontSize: '0.8rem' }}>Go</Link>
           </div>
           
           <div className="hero-buttons">

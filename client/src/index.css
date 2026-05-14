@@ -257,18 +257,33 @@ h1,h2,h3,h4,h5 { font-family: var(--font-heading); line-height: 1.2; }
 
 @media (max-width: 768px) {
   .bottom-nav { display: flex; }
-  main { padding-bottom: 70px; } /* Space for bottom nav */
+  main { padding-bottom: 80px; } /* More space for bottom nav */
   
-  .hero-title { font-size: 2.2rem; }
-  .section-padding { padding: 3rem 0; }
+  .container { padding: 0 1.2rem; }
+  .section-padding { padding: 2.5rem 0; }
   
-  .nav-links { display: none; } /* Use bottom nav instead */
+  .hero-title { font-size: 2.2rem !important; line-height: 1.2; }
+  .hero-desc { font-size: 1rem !important; }
+  .section-title { font-size: 1.8rem !important; }
+  
+  .nav-links { display: none; }
   .hamburger { display: none; }
+  .navbar { padding: 0.8rem 0; }
+  .navbar .logo { font-size: 1.2rem; }
   
-  .menu-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1rem;
+  .menu-grid, .packs-grid {
+    grid-template-columns: 1fr; /* Single column for better focus */
+    gap: 1.5rem;
   }
+  
+  .glass-card { padding: 1.2rem; }
+  .btn { width: 100%; justify-content: center; } /* Buttons full width on mobile */
+  
+  .form-group { margin-bottom: 1rem; }
+  .form-input { padding: 1rem; font-size: 1rem; }
+
+  /* Better images on mobile */
+  .pack-card-img, .menu-card-img { height: 200px !important; }
 }
 
 /* ===== HERO ===== */
