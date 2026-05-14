@@ -178,6 +178,7 @@ h1,h2,h3,h4,h5 { font-family: var(--font-heading); line-height: 1.2; }
   .nav-links.open { right: 0; }
   .nav-link { font-size: 1.1rem; padding: 0.8rem 2rem; }
   .hamburger { display: flex; }
+  .navbar { padding: 1.5rem 0 1rem; } /* Extra padding for mobile spacing */
 }
 
 /* ===== HERO ===== */
