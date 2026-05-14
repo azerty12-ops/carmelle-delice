@@ -283,7 +283,10 @@ export default function Menu() {
                     <select className="form-input" name="guests" required>
                       <option value="">-- Sélectionner un menu --</option>
                       {packs.map(p => (
-                        <option key={p._id} value={p.name}>{p.name} - {p.price} F</option>
+                        <option key={p._id} value={p.name}>[PACK] {p.name} - {p.price} F</option>
+                      ))}
+                      {plats.map(p => (
+                        <option key={p._id} value={p.name}>[PLAT] {p.name} - {p.price} F</option>
                       ))}
                       <option value="Box Perso">Box Personnalisée</option>
                     </select>
