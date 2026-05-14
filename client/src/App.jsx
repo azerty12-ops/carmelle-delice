@@ -12,6 +12,7 @@ import Menu from './pages/Menu';
 import Commander from './pages/Commander';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
+import PromotionalBanner from './components/PromotionalBanner';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -35,11 +36,12 @@ function Layout() {
   return (
     <>
       <ScrollToTop />
+      {!isAdmin && <PromotionalBanner />}
       {!isAdmin && <Navbar />}
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/histoire" element={<Histoire />} />
+          <Route path="/notre-histoire" element={<Histoire />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/commander" element={<Commander />} />
           <Route path="/contact" element={<Contact />} />

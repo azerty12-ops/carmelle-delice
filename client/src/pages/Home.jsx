@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FiSend, FiPackage, FiStar, FiClock } from 'react-icons/fi';
 import { FaTiktok, FaInstagram } from 'react-icons/fa';
 import ScrollReveal from '../components/ScrollReveal';
+import ReviewsSection from '../components/ReviewsSection';
 
 const features = [
   { icon: <FiSend />, title: 'Canapés Chauds', desc: 'Pastels, quiches, pizzas, nems et bien plus, toujours frais et croustillants' },
@@ -189,47 +190,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* REVIEWS SECTION */}
-      <section className="section-padding">
-        <div className="container">
-          <ScrollReveal>
-            <div className="section-header">
-              <span className="section-tag">Témoignages</span>
-              <h2 className="section-title">Ce que disent nos <span className="text-gold">Clients</span></h2>
-              <div className="section-line" />
-            </div>
-          </ScrollReveal>
-          
-          {reviews.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-              {reviews.map((rev, i) => (
-                <ScrollReveal key={i}>
-                  <div className="glass-card" style={{ padding: '2rem', position: 'relative' }}>
-                    <div style={{ color: 'var(--gold-400)', fontSize: '1.2rem', marginBottom: '1rem' }}>
-                      {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
-                    </div>
-                    <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6' }}>"{rev.comment}"</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--navy-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold-400)', fontWeight: 'bold' }}>
-                        {rev.userName.charAt(0)}
-                      </div>
-                      <div>
-                        <strong style={{ display: 'block' }}>{rev.userName}</strong>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          {new Date(rev.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          ) : (
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Soyez le premier à donner votre avis depuis votre espace client !</p>
-          )}
-        </div>
-      </section>
-
+      <ReviewsSection reviews={reviews} />
 
       {/* ORDER CTA */}
       <section className="section-padding">
