@@ -97,6 +97,39 @@ export default function Histoire() {
         </div>
       </section>
 
+      {/* BOX ROYALE - NOTRE SIGNATURE */}
+      <section className="section-padding" style={{ background: 'var(--navy-900)' }}>
+        <div className="container">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', alignItems: 'center' }}>
+            <ScrollReveal className="reveal-left">
+              <div style={{ position: 'relative' }}>
+                <img src="/images/box_royale.png" alt="Box Royale" style={{ borderRadius: 'var(--radius-md)', width: '100%', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--gold-400)' }} />
+                <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'var(--gold-400)', color: 'var(--navy-900)', padding: '1rem', borderRadius: '50%', fontWeight: 'bold', boxShadow: 'var(--shadow-md)' }}>
+                  Le Top
+                </div>
+              </div>
+            </ScrollReveal>
+            
+            <ScrollReveal className="reveal-right">
+              <span className="section-tag">Notre Signature</span>
+              <h2 className="section-title">La Box <span className="text-gold">Royale</span></h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: '1.8', marginBottom: '2rem' }}>
+                Plus qu'un menu, c'est une célébration. La Box Royale est notre création la plus ambitieuse : 
+                <strong> 40 pièces</strong> d'exception accompagnées d'une grande bouteille de 1.5L pour vos plus beaux moments.
+              </p>
+              <div className="glass-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--gold-400)' }}>
+                <p style={{ margin: 0, fontSize: '0.95rem', fontStyle: 'italic' }}>
+                  "Un assortiment complet pour les gourmets qui ne veulent faire aucun compromis."
+                </p>
+              </div>
+              <div style={{ marginTop: '2rem' }}>
+                <Link to="/menu" className="btn btn-primary">Découvrir le Menu</Link>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* COMMUNITY GALLERY */}
       <section className="section-padding page-alt">
         <div className="container" style={{ maxWidth: '1200px' }}>

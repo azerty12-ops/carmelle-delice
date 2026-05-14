@@ -16,7 +16,6 @@ const packs = [
   { name: 'Box Découverte', pieces: '18 pièces + Boisson', price: '6 500 F', tag: '✨ Populaire', img: '/images/box_decouverte.png', items: '5 pastels, 6 mini pizzas, 2 tacos, 2 quiches, 2 mini cakes, 1 nem, 1 Fanta ou Coca-Cola' },
   { name: 'Box Moyenne', pieces: '20 pièces + Boisson', price: '8 500 F', tag: '🔥 Recommandé', img: '/images/box_moyenne.png', items: '5 pastels, 6 mini pizzas, 3 nems, 2 tacos, 2 quiches, 1 Coca-Cola ou Fanta' },
   { name: 'Box VIP', pieces: '25 pièces + 2 Boissons', price: '16 000 F', tag: '⭐ Best-seller', img: '/images/box_vip.png', items: '6 pastels, 6 mini pizzas, 2 tacos, 3 brochettes, 2 nems, 2 bat\'bout, 4 quiches, 2 Coca-Cola ou Fanta' },
-  { name: 'Box Royale', pieces: '40 pièces + Grande Boisson', price: '25 000 F', tag: '👑 Prestige', img: '/images/box_royale.png', items: '8 pastels, 8 mini pizzas, 4 tacos, 5 brochettes, 4 nems, 4 bat\'bout, 6 quiches, 1 Bouteille Fanta 1.5L' },
 ];
 
 const plats = [
