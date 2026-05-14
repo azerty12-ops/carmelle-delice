@@ -13,6 +13,7 @@ import Commander from './pages/Commander';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import PromotionalBanner from './components/PromotionalBanner';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { FiHome, FiGrid, FiShoppingBag, FiUser } from 'react-icons/fi';
 
 function ScrollToTop() {
@@ -84,6 +85,7 @@ function Layout() {
       </main>
       {!isAdmin && <Footer />}
       {!isAdmin && <BottomNav />}
+      {!isAdmin && <FloatingWhatsApp />}
       <Toast />
     </>
   );
