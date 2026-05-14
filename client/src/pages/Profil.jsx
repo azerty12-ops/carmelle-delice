@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiUser, FiLogOut, FiStar, FiPackage, FiInfo, FiChevronRight, FiCopy, FiShare2, FiEdit3, FiTrash2, FiGift } from 'react-icons/fi';
 import axios from 'axios';
-import { getMyOrders, trackOrder } from '../api/api';
+import { getMyOrders, trackOrder, updateUser } from '../api/api';
 
 export default function Profil() {
   const { user, loading, logout } = useAuth();
