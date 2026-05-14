@@ -131,7 +131,23 @@ router.patch('/:id/status', async (req, res) => {
       order.pointsEarned = pointsEarned;
       await order.save();
       
-      await User.findByIdAndUpdate(order.userId, { $inc: { points: pointsEarned } });
+      const user = await User.findById(order.userId);
+      if (user) {
+        user.points += pointsEarned;
+        
+        // Bonus parrainage : si c'est la 1ère commande livrée, le parrain gagne 100 pts
+        if (user.referredBy) {
+          const ordersCount = await Order.countDocuments({ userId: order.userId, status: 'delivered' });
+          if (ordersCount === 1) {
+            const referrer = await User.findOne({ referralCode: user.referredBy });
+            if (referrer) {
+              referrer.points += 100;
+              await referrer.save();
+            }
+          }
+        }
+        await user.save();
+      }
     }
 
     res.json({ success: true, order });

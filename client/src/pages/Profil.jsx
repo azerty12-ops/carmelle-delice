@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiLogOut, FiStar, FiPackage, FiInfo, FiChevronRight } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiStar, FiPackage, FiInfo, FiChevronRight, FiCopy, FiShare2, FiEdit3, FiTrash2, FiGift } from 'react-icons/fi';
 import axios from 'axios';
 import { getMyOrders, trackOrder } from '../api/api';
 
@@ -227,11 +227,45 @@ export default function Profil() {
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gold-400)' }}>
                       <FiStar /> Programme Fidélité
                     </h3>
-                    <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0.5rem 0', color: 'var(--white)' }}>{user.points || 0} <span style={{ fontSize: '1rem', color: 'var(--gold-400)' }}>Points</span></p>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                      Valeur estimée : <strong>{(Math.floor((user.points || 0) / 100) * 500).toLocaleString()} F</strong> de réduction.<br/>
-                      Cumulez 100 points pour obtenir 500 F de remise ! (1 pt par 100 F dépensés)
-                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center', marginTop: '1rem' }}>
+                      <div>
+                        <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0, color: 'var(--white)' }}>{user.points || 0} <span style={{ fontSize: '1rem', color: 'var(--gold-400)' }}>Points</span></p>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Valeur : {(Math.floor((user.points || 0) / 100) * 500).toLocaleString()} F de remise</p>
+                      </div>
+                      
+                      <div style={{ flex: 1, minWidth: '200px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.5rem' }}>
+                        <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--white)' }}>🎁 Parrainez un ami</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <code style={{ background: 'var(--navy-900)', padding: '0.5rem 1rem', borderRadius: '8px', color: 'var(--gold-400)', fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '1px' }}>
+                            {user.referralCode || 'CD-XXXXXX'}
+                          </code>
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText(user.referralCode);
+                              alert('Code copié !');
+                            }}
+                            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--white)', padding: '0.6rem', borderRadius: '8px', cursor: 'pointer' }}>
+                            <FiCopy />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: 'Carmel Délice',
+                                  text: `Utilise mon code ${user.referralCode} pour gagner 50 points sur Carmel Délice !`,
+                                  url: window.location.origin
+                                });
+                              }
+                            }}
+                            style={{ background: 'var(--gold-400)', border: 'none', color: 'var(--navy-900)', padding: '0.6rem', borderRadius: '8px', cursor: 'pointer' }}>
+                            <FiShare2 />
+                          </button>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                          Ton ami gagne 50 pts, tu gagnes 100 pts !
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

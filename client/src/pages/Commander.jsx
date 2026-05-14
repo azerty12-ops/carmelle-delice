@@ -122,27 +122,32 @@ export default function Commander() {
     );
   };
 
-  const getWhatsAppLink = (orderRes) => {
+  const getWhatsAppLink = (orderRes = null) => {
     const phone = "2250103717078";
-    if (!orderRes) return `https://wa.me/${phone}`;
     
-    let text = `*NOUVELLE COMMANDE : ${orderRes.order?.orderNumber || ''}*\n\n`;
-    text += `*Client:* ${orderRes.customerName}\n`;
-    text += `*Téléphone:* ${orderRes.customerPhone}\n`;
-    text += `*Adresse:* ${orderRes.customerAddress}\n\n`;
-    text += `*Commande:*\n`;
-    orderRes.items.forEach(item => {
+    let text = "";
+    if (orderRes && orderRes.order) {
+      text = `*NOUVELLE COMMANDE : ${orderRes.order.orderNumber}*\n\n`;
+      text += `*Client:* ${orderRes.customerName}\n`;
+      text += `*Téléphone:* ${orderRes.customerPhone}\n`;
+      text += `*Adresse:* ${orderRes.customerAddress}\n\n`;
+    } else {
+      text = `*NOUVELLE COMMANDE (Site Web)*\n\n`;
+      text += `*Client:* ${formData.name || '...'}\n`;
+      text += `*Téléphone:* ${formData.phone || '...'}\n`;
+      text += `*Adresse:* ${formData.address || '...'}\n\n`;
+    }
+
+    text += `*Panier:*\n`;
+    const items = orderRes ? orderRes.items : cart;
+    items.forEach(item => {
       text += `- ${item.quantity}x ${item.name} (${(item.price * item.quantity).toLocaleString()} F)\n`;
     });
-    if (orderRes.discountAmount > 0) {
-      text += `\n*Réduction:* -${orderRes.discountAmount.toLocaleString()} F\n`;
-    }
-    text += `\n*Total Payé:* ${orderRes.total.toLocaleString()} F\n\n`;
-    text += `*Livraison:* ${orderRes.deliveryDate} à ${orderRes.deliveryTime}\n`;
-    text += `*Paiement:* ${orderRes.paymentMethod === 'mobile_money' ? 'Payé (Mobile Money)' : 'À payer à la livraison'}`;
-    if (orderRes.notes) {
-      text += `\n\n*Notes:* ${orderRes.notes}`;
-    }
+
+    const total = orderRes ? orderRes.total : finalPrice;
+    text += `\n*Total :* ${total.toLocaleString()} F\n`;
+    text += `*Livraison :* ${formData.deliveryDate} à ${formData.deliveryTime}\n`;
+    text += `*Paiement :* ${formData.paymentMethod === 'mobile_money' ? 'Mobile Money' : 'À la livraison'}`;
     
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   };
@@ -586,9 +591,25 @@ export default function Commander() {
                       <textarea className="form-input" placeholder="Instructions spéciales, allergies..." value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} style={{ minHeight: '60px' }} />
                     </div>
                     
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: '1.1rem', padding: '1rem' }} disabled={sending}>
-                      {sending ? 'Envoi en cours...' : <><FiSend /> Confirmer — {finalPrice.toLocaleString()} F</>}
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: '1.1rem', padding: '1rem' }} disabled={sending}>
+                        {sending ? 'Envoi en cours...' : <><FiSend /> Enregistrer ma commande — {finalPrice.toLocaleString()} F</>}
+                      </button>
+                      
+                      <a 
+                        href={getWhatsAppLink()} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="btn" 
+                        style={{ width: '100%', justifyContent: 'center', fontSize: '1.1rem', padding: '1rem', background: '#25D366', color: 'white', border: 'none' }}
+                        onClick={() => {
+                          // On enregistre quand même en DB en arrière-plan pour le suivi
+                          if (!sending) handleConfirmOrder();
+                        }}
+                      >
+                        <FiPhone /> Commander via WhatsApp (Direct)
+                      </a>
+                    </div>
                   </form>
                 </div>
               </ScrollReveal>

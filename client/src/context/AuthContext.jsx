@@ -31,8 +31,8 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
-  const register = async (name, email, password, phone) => {
-    const res = await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/users/register', { name, email, password, phone });
+  const register = async (name, email, password, phone, referralBy) => {
+    const res = await axios.post((import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/users/register', { name, email, password, phone, referralBy });
     localStorage.setItem('carmel_token', res.data.token);
     setUser(res.data.user);
     return res.data;

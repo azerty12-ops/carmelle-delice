@@ -24,7 +24,7 @@ const auth = (req, res, next) => {
 // Inscription
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, referralBy } = req.body;
     
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'Cet email est déjà utilisé' });
@@ -32,11 +32,23 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = new User({ name, email, password: hashedPassword, phone });
+    // Générer un code de parrainage unique (ex: CARMEL-XXXX)
+    const referralCode = 'CD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    const user = new User({ 
+      name, 
+      email, 
+      password: hashedPassword, 
+      phone, 
+      referralCode,
+      referredBy: referralBy || null,
+      points: referralBy ? 50 : 0 // Bonus de bienvenue pour le filleul
+    });
+
     await user.save();
 
     const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, points: user.points, isAdmin: user.isAdmin } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, points: user.points, isAdmin: user.isAdmin, referralCode: user.referralCode } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

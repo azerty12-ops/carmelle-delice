@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', referralBy: '' });
   const [error, setError] = useState('');
   const { login, register, socialLogin } = useAuth();
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function Auth() {
       if (isLogin) {
         await login(formData.email, formData.password);
       } else {
-        await register(formData.name, formData.email, formData.password, formData.phone);
+        await register(formData.name, formData.email, formData.password, formData.phone, formData.referralBy);
       }
       navigate('/profil');
     } catch (err) {
@@ -68,6 +68,14 @@ export default function Auth() {
             <div className="form-group">
               <label className="form-label"><FiPhone /> Téléphone</label>
               <input type="text" className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="form-group">
+              <label className="form-label">🎁 Code parrainage (Optionnel)</label>
+              <input type="text" placeholder="CD-XXXXXX" className="form-input" value={formData.referralBy} onChange={e => setFormData({...formData, referralBy: e.target.value.toUpperCase()})} />
+              <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '4px' }}>Gagnez 50 points de bienvenue !</small>
             </div>
           )}
 
