@@ -69,7 +69,7 @@ export default function Commander() {
 
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
   const discountAmount = Math.floor(totalPrice * (discount / 100));
-  const pointsDiscount = usePoints ? Math.min(Math.floor((user?.points || 0) / 100) * 500, totalPrice - discountAmount) : 0;
+  const pointsDiscount = (usePoints && (user?.points || 0) >= 5000) ? 1000 : 0;
   const finalPrice = Math.max(0, totalPrice - discountAmount - pointsDiscount);
 
   const handleApplyPromo = async () => {
@@ -170,7 +170,7 @@ export default function Commander() {
       promoCode: discount > 0 ? promoCode : null,
       discountAmount,
       locationUrl,
-      pointsUsed: usePoints ? Math.floor(pointsDiscount / 500) * 100 : 0
+      pointsUsed: usePoints ? 5000 : 0
     };
 
     try {
@@ -446,7 +446,7 @@ export default function Commander() {
                           </div>
 
                           {/* LOYALTY POINTS */}
-                          {user && user.points >= 100 && (
+                          {user && user.points >= 5000 && (
                             <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(212,168,67,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(212,168,67,0.2)' }}>
                               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--gold-400)' }}>
                                 <input 

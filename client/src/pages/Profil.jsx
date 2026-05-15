@@ -230,7 +230,7 @@ export default function Profil() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center', marginTop: '1rem' }}>
                       <div>
                         <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0, color: 'var(--white)' }}>{user.points || 0} <span style={{ fontSize: '1rem', color: 'var(--gold-400)' }}>Points</span></p>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Valeur : {(Math.floor((user.points || 0) / 100) * 500).toLocaleString()} F de remise</p>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Valeur : {(Math.floor((user.points || 0) / 5000) * 1000).toLocaleString()} F de remise</p>
                       </div>
                       
                       <div style={{ flex: 1, minWidth: '200px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1.5rem' }}>
