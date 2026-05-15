@@ -157,7 +157,6 @@ export default function Commander() {
     setSending(true);
     
     const orderData = {
-      userId: user?._id || user?.id || null,
       customerName: formData.name,
       customerPhone: formData.phone,
       customerAddress: formData.address.trim() || (locationUrl ? "📍 Position GPS capturée (voir lien)" : ""),

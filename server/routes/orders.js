@@ -3,19 +3,22 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const { auth } = require('./users');
 
-// Create order
-router.post('/', async (req, res) => {
+// Create order (Protected to ensure user linkage)
+router.post('/', auth, async (req, res) => {
   try {
-    const orderData = { ...req.body };
+    const orderData = { 
+      ...req.body,
+      userId: req.user.id // Force the link to the logged-in user
+    };
     
     // Si l'utilisateur utilise des points
-    if (orderData.userId && orderData.pointsUsed > 0) {
-      const user = await User.findById(orderData.userId);
+    if (orderData.pointsUsed > 0) {
+      const user = await User.findById(req.user.id);
       if (user && user.points >= orderData.pointsUsed) {
         user.points -= orderData.pointsUsed;
         await user.save();
       } else {
-        orderData.pointsUsed = 0; // Sécurité si l'utilisateur n'a pas assez de points
+        orderData.pointsUsed = 0;
       }
     }
 
