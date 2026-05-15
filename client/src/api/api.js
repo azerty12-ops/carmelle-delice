@@ -34,4 +34,5 @@ export const updateMenuItem = (id, data) => API.put(`/menu/${id}`, data);
 export const deleteMenuItem = (id) => API.delete(`/menu/${id}`);
 
 export const updateUser = (data) => API.put('/users/profile', data);
+export const getUsers = () => API.get('/users');
 export const adminLogin = (password) => API.post('/users/admin-login', { password });

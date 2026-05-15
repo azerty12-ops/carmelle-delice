@@ -383,116 +383,122 @@ export default function Commander() {
               </div>
             </ScrollReveal>
           ) : (
-            <div className="order-layout">
-              {/* CART RECAP */}
-              <ScrollReveal>
-                <div className="glass-card order-cart" style={{ position: 'sticky', top: '100px' }}>
-                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-                    🛒 Votre Panier ({totalItems} article{totalItems > 1 ? 's' : ''})
-                  </h2>
-                  {cart.map(item => (
-                    <div key={item.name} className="order-item">
-                      <div className="order-item-info">
-                        <strong>{item.name}</strong>
-                        {item.desc && <p className="order-item-desc">{item.desc}</p>}
-                        <span className="order-item-price">{item.price.toLocaleString()} F</span>
-                      </div>
-                      <div className="order-item-controls">
-                        <button className="qty-btn" onClick={() => updateQuantity(item.name, item.quantity - 1)}><FiMinus size={14} /></button>
-                        <span className="qty-count">{item.quantity}</span>
-                        <button className="qty-btn qty-btn-plus" onClick={() => updateQuantity(item.name, item.quantity + 1)}><FiPlus size={14} /></button>
-                        <button className="order-remove" onClick={() => removeFromCart(item.name)}><FiTrash2 size={16} /></button>
+            !user ? (
+                    <div className="glass-card login-required-card" style={{ padding: '3rem', textAlign: 'center', margin: '2rem 0' }}>
+                      <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>🔐</div>
+                      <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: '1rem' }}>Connexion Requise</h2>
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: 1.7, maxWidth: '500px', margin: '0 auto 2rem' }}>
+                        Pour commander sur Carmel Délice et bénéficier de votre programme de fidélité, vous devez être inscrit.
+                      </p>
+                      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <Link to="/auth" className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>Se Connecter / S'inscrire</Link>
+                        <Link to="/menu" className="btn btn-outline" style={{ padding: '0.8rem 2rem' }}>Retour au Menu</Link>
                       </div>
                     </div>
-                  ))}
-                  
-                  {/* PROMO CODE */}
-                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                      <FiTag /> Code Promo
-                    </label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input 
-                        type="text" 
-                        placeholder="Ex: WELCOME10" 
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        className="form-input" 
-                        style={{ padding: '0.5rem', fontSize: '0.9rem' }}
-                        disabled={discount > 0}
-                      />
-                      <button 
-                        type="button" 
-                        className="btn btn-outline" 
-                        style={{ padding: '0.5rem 1rem' }}
-                        onClick={handleApplyPromo}
-                        disabled={applyingPromo || discount > 0 || !promoCode}
-                      >
-                        {applyingPromo ? '...' : (discount > 0 ? 'Appliqué' : 'Appliquer')}
-                      </button>
-                    </div>
-                  </div>
+                  ) : (
+                    <div className="order-layout">
+                      {/* CART RECAP */}
+                      <ScrollReveal>
+                        <div className="glass-card order-cart" style={{ position: 'sticky', top: '100px' }}>
+                          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem' }}>
+                            🛒 Votre Panier ({totalItems} article{totalItems > 1 ? 's' : ''})
+                          </h2>
+                          {cart.map(item => (
+                            <div key={item.name} className="order-item">
+                              <div className="order-item-info">
+                                <strong>{item.name}</strong>
+                                {item.desc && <p className="order-item-desc">{item.desc}</p>}
+                                <span className="order-item-price">{item.price.toLocaleString()} F</span>
+                              </div>
+                              <div className="order-item-controls">
+                                <button className="qty-btn" onClick={() => updateQuantity(item.name, item.quantity - 1)}><FiMinus size={14} /></button>
+                                <span className="qty-count">{item.quantity}</span>
+                                <button className="qty-btn qty-btn-plus" onClick={() => updateQuantity(item.name, item.quantity + 1)}><FiPlus size={14} /></button>
+                                <button className="order-remove" onClick={() => removeFromCart(item.name)}><FiTrash2 size={16} /></button>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* PROMO CODE */}
+                          <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                              <FiTag /> Code Promo
+                            </label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input 
+                                type="text" 
+                                placeholder="Ex: WELCOME10" 
+                                value={promoCode}
+                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                className="form-input" 
+                                style={{ padding: '0.5rem', fontSize: '0.9rem' }}
+                                disabled={discount > 0}
+                              />
+                              <button 
+                                type="button" 
+                                className="btn btn-outline" 
+                                style={{ padding: '0.5rem 1rem' }}
+                                onClick={handleApplyPromo}
+                                disabled={applyingPromo || discount > 0 || !promoCode}
+                              >
+                                {applyingPromo ? '...' : (discount > 0 ? 'Appliqué' : 'Appliquer')}
+                              </button>
+                            </div>
+                          </div>
 
-                  {/* LOYALTY POINTS */}
-                  {user && user.points >= 100 && (
-                    <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(212,168,67,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(212,168,67,0.2)' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--gold-400)' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={usePoints} 
-                          onChange={(e) => setUsePoints(e.target.checked)}
-                          style={{ width: '18px', height: '18px', accentColor: 'var(--gold-primary)' }}
-                        />
-                        Utiliser mes points ({user.points} pts dispo)
-                      </label>
-                      {usePoints && (
-                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
-                          Réduction appliquée : <strong>-{pointsDiscount.toLocaleString()} F</strong>
-                        </p>
-                      )}
-                    </div>
-                  )}
+                          {/* LOYALTY POINTS */}
+                          {user && user.points >= 100 && (
+                            <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(212,168,67,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(212,168,67,0.2)' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--gold-400)' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={usePoints} 
+                                  onChange={(e) => setUsePoints(e.target.checked)}
+                                  style={{ width: '18px', height: '18px', accentColor: 'var(--gold-primary)' }}
+                                />
+                                Utiliser mes points ({user.points} pts dispo)
+                              </label>
+                              {usePoints && (
+                                <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                                  Réduction appliquée : <strong>-{pointsDiscount.toLocaleString()} F</strong>
+                                </p>
+                              )}
+                            </div>
+                          )}
 
-                  <div className="order-total" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Sous-total</span>
-                      <span style={{ fontSize: '1rem' }}>{totalPrice.toLocaleString()} F</span>
-                    </div>
-                    {discount > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10b981' }}>
-                        <span style={{ fontSize: '1rem' }}>Réduction ({discount}%)</span>
-                        <span style={{ fontSize: '1rem' }}>-{discountAmount.toLocaleString()} F</span>
-                      </div>
-                    )}
-                    {pointsDiscount > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--gold-400)' }}>
-                        <span style={{ fontSize: '1rem' }}>Points de fidélité</span>
-                        <span style={{ fontSize: '1rem' }}>-{pointsDiscount.toLocaleString()} F</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
-                      <span>Total à payer</span>
-                      <span className="order-total-price">{finalPrice.toLocaleString()} F</span>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
+                          <div className="order-total" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                              <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Sous-total</span>
+                              <span style={{ fontSize: '1rem' }}>{totalPrice.toLocaleString()} F</span>
+                            </div>
+                            {discount > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10b981' }}>
+                                <span style={{ fontSize: '1rem' }}>Réduction ({discount}%)</span>
+                                <span style={{ fontSize: '1rem' }}>-{discountAmount.toLocaleString()} F</span>
+                              </div>
+                            )}
+                            {pointsDiscount > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--gold-400)' }}>
+                                <span style={{ fontSize: '1rem' }}>Points de fidélité</span>
+                                <span style={{ fontSize: '1rem' }}>-{pointsDiscount.toLocaleString()} F</span>
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+                              <span>Total à payer</span>
+                              <span className="order-total-price">{finalPrice.toLocaleString()} F</span>
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollReveal>
 
-              {/* ORDER FORM */}
-              <ScrollReveal>
-                <div className="glass-card order-form-card">
-                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-                    📋 Vos Informations
-                  </h2>
-                  
-                  {!user && (
-                    <div style={{ background: 'rgba(200,152,46,0.1)', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--gold-400)' }}>Déjà client ? Connectez-vous pour récupérer vos adresses.</span>
-                      <Link to="/auth" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Se connecter</Link>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSubmit}>
+                      {/* ORDER FORM */}
+                      <ScrollReveal>
+                        <div className="glass-card order-form-card">
+                          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem' }}>
+                            📋 Vos Informations
+                          </h2>
+                          
+                          <form onSubmit={handleSubmit}>
                     <div className="form-group">
                       <label className="form-label">Nom Complet</label>
                       <input className="form-input" required placeholder="Votre nom complet" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
@@ -611,9 +617,10 @@ export default function Commander() {
                       </a>
                     </div>
                   </form>
-                </div>
-              </ScrollReveal>
-            </div>
+                  </div>
+                </ScrollReveal>
+              </div>
+            )
           )}
         </div>
       </section>

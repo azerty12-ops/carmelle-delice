@@ -148,4 +148,15 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+// Liste des utilisateurs (Admin seulement)
+router.get('/', auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ error: 'Accès interdit' });
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = { router, auth };

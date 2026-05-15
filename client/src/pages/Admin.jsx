@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiLock, FiLogOut, FiPackage, FiClock, FiCheckCircle, FiTruck, FiDollarSign, FiTrash2, FiChevronDown, FiUsers, FiTrendingUp, FiBarChart2, FiXCircle, FiTag, FiPlus, FiMessageCircle, FiEdit3 } from 'react-icons/fi';
-import { getOrders, updateOrderStatus, deleteOrder, getOrderStats, getPromos, createPromo, deletePromo, getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getMessages, getReservations, adminLogin, updateReservationStatus, deleteReservation } from '../api/api';
+import { getOrders, updateOrderStatus, deleteOrder, getOrderStats, getPromos, createPromo, deletePromo, getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getMessages, getReservations, adminLogin, updateReservationStatus, deleteReservation, getUsers } from '../api/api';
 
 const ADMIN_PASSWORD = '77002602KO';
 
@@ -23,6 +23,7 @@ export default function Admin() {
   const [stats, setStats] = useState(null);
   const [promos, setPromos] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
+  const [users, setUsers] = useState([]);
   
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
@@ -86,6 +87,10 @@ export default function Admin() {
       const resRes = await getReservations();
       setReservations(resRes.data.reservations || []);
     } catch { setReservations([]); }
+    try {
+      const usersRes = await getUsers();
+      setUsers(usersRes.data || []);
+    } catch { setUsers([]); }
     setLoading(false);
   };
 
@@ -400,33 +405,69 @@ export default function Admin() {
         )}
 
         {/* CUSTOMERS TAB */}
-        {activeTab === 'customers' && stats?.topCustomers && (
+        {activeTab === 'customers' && (
           <div className="admin-customers-tab">
-            <h2 className="admin-tab-title"><FiUsers /> Étude des Clients</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 className="admin-tab-title" style={{ margin: 0 }}><FiUsers /> Base Clients ({users.length})</h2>
+              <button className="btn btn-outline" onClick={() => {
+                const headers = ['Nom', 'Email', 'Telephone', 'Points', 'Code Parrainage', 'Date Inscription'];
+                const csv = [
+                  headers.join(','),
+                  ...users.map(u => [
+                    `"${u.name}"`,
+                    u.email,
+                    u.phone || '',
+                    u.points || 0,
+                    u.referralCode || '',
+                    new Date(u.createdAt).toLocaleDateString()
+                  ].join(','))
+                ].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', `clients_${new Date().toLocaleDateString()}.csv`);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              }}>📥 Exporter la base</button>
+            </div>
+            
             <div className="admin-customers-grid">
-              {stats.topCustomers.map((c, i) => (
-                <div key={i} className="admin-customer-card">
-                  <div className="customer-avatar">{c._id.name?.charAt(0)?.toUpperCase() || '?'}</div>
+              {users.map((u, i) => (
+                <div key={u._id || i} className="admin-customer-card">
+                  <div className="customer-avatar">{u.name?.charAt(0)?.toUpperCase() || '?'}</div>
                   <div className="customer-info">
-                    <strong>{c._id.name}</strong>
-                    <span className="customer-phone">{c._id.phone}</span>
+                    <strong>{u.name}</strong>
+                    <span className="customer-phone">{u.phone || 'Pas de numéro'}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.email}</span>
                   </div>
                   <div className="customer-stats">
                     <div className="customer-stat">
-                      <span className="customer-stat-value">{c.totalOrders}</span>
-                      <span className="customer-stat-label">Commandes</span>
+                      <span className="customer-stat-value">{u.points || 0}</span>
+                      <span className="customer-stat-label">Points</span>
                     </div>
                     <div className="customer-stat">
-                      <span className="customer-stat-value">{c.totalSpent.toLocaleString()} F</span>
-                      <span className="customer-stat-label">Dépensé</span>
+                      <span className="customer-stat-value" style={{ fontSize: '0.8rem' }}>{u.referralCode || '-'}</span>
+                      <span className="customer-stat-label">Code</span>
                     </div>
                     <div className="customer-stat">
-                      <span className="customer-stat-value">{new Date(c.lastOrder).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
-                      <span className="customer-stat-label">Dernière</span>
+                      <span className="customer-stat-value" style={{ fontSize: '0.8rem' }}>{new Date(u.createdAt).toLocaleDateString()}</span>
+                      <span className="customer-stat-label">Inscrit le</span>
                     </div>
                   </div>
+                  {u.addresses?.length > 0 && (
+                    <div className="customer-addresses" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span className="customer-addr-label">📍 Adresses enregistrées :</span>
+                      {u.addresses.map((addr, idx) => (
+                        <span key={idx} className="customer-addr">• {addr}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
+              {users.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Aucun client inscrit pour le moment.</p>}
             </div>
           </div>
         )}
