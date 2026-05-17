@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const Order = require('../models/Order');
 const User = require('../models/User');
-const { auth } = require('./users');
+const { auth, adminAuth } = require('./users');
 
 // Create order (Protected to ensure user linkage)
 router.post('/', auth, async (req, res) => {
@@ -30,7 +30,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Stats (must be before /:id routes)
-router.get('/stats', async (req, res) => {
+router.get('/stats', adminAuth, async (req, res) => {
   try {
     const total = await Order.countDocuments();
     const pending = await Order.countDocuments({ status: 'pending' });
@@ -108,7 +108,7 @@ router.get('/my-orders', auth, async (req, res) => {
 });
 
 // Get all orders
-router.get('/', async (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json({ success: true, orders });
@@ -118,7 +118,7 @@ router.get('/', async (req, res) => {
 });
 
 // Update order status
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', adminAuth, async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findById(req.params.id);
@@ -160,7 +160,7 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 // Delete order
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
     res.json({ success: true });

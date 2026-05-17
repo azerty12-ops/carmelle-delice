@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Message = require('../models/Message');
+const { adminAuth } = require('./users');
 
 router.post('/', async (req, res) => {
   try {
@@ -10,7 +11,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
     res.json({ success: true, messages });

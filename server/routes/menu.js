@@ -1,18 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const MenuItem = require('../models/MenuItem');
-const { auth } = require('./users'); // Réutiliser le middleware d'auth admin si possible
-
-// Middleware pour vérifier si c'est un admin
-const adminAuth = (req, res, next) => {
-  auth(req, res, () => {
-    if (req.user && req.user.isAdmin) {
-      next();
-    } else {
-      res.status(403).json({ error: 'Accès restreint aux administrateurs' });
-    }
-  });
-};
+const { auth, adminAuth } = require('./users');
 
 // GET all menu items
 router.get('/', async (req, res) => {
@@ -25,7 +14,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET all items (including unavailable - for admin)
-router.get('/admin', async (req, res) => {
+router.get('/admin', adminAuth, async (req, res) => {
   try {
     const items = await MenuItem.find();
     res.json(items);

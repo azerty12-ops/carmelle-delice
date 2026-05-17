@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
+const rateLimit = require('express-rate-limit');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const router = express.Router();
 
@@ -21,8 +22,26 @@ const auth = (req, res, next) => {
   }
 };
 
+// Middleware pour vérifier si c'est un admin
+const adminAuth = (req, res, next) => {
+  auth(req, res, () => {
+    if (req.user && req.user.isAdmin) {
+      next();
+    } else {
+      res.status(403).json({ error: 'Accès restreint aux administrateurs' });
+    }
+  });
+};
+
+// Limiteur pour les tentatives de connexion/inscription
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limite chaque IP à 10 tentatives
+  message: { error: 'Trop de tentatives, veuillez réessayer plus tard' }
+});
+
 // Inscription
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { name, email, password, phone, referralBy } = req.body;
     
@@ -55,7 +74,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Connexion
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -71,12 +90,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Connexion Admin (Spécifique avec mot de passe hardcodé)
-router.post('/admin-login', async (req, res) => {
+// Connexion Admin (Spécifique avec mot de passe)
+router.post('/admin-login', authLimiter, async (req, res) => {
   const password = req.body.password?.trim();
-  const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || '77002602KO').trim();
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
   
-  console.log('Login attempt:', { received: password, expected: ADMIN_PASSWORD });
+  if (!ADMIN_PASSWORD) {
+    console.error('CRITICAL ERROR: ADMIN_PASSWORD is not set in .env file');
+    return res.status(500).json({ error: 'Configuration serveur invalide. Le mot de passe admin n\'est pas défini.' });
+  }
 
   if (password === ADMIN_PASSWORD) {
     const token = jwt.sign({ id: 'admin', isAdmin: true }, JWT_SECRET, { expiresIn: '1d' });
@@ -123,7 +145,11 @@ router.post('/auth/social', async (req, res) => {
 // Profil
 router.get('/me', auth, async (req, res) => {
   try {
+    if (req.user.id === 'admin') {
+      return res.json({ _id: 'admin', name: 'Admin', email: 'admin@carmeldelice.com', isAdmin: true });
+    }
     const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -149,9 +175,8 @@ router.put('/profile', auth, async (req, res) => {
 });
 
 // Liste des utilisateurs (Admin seulement)
-router.get('/', auth, async (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
   try {
-    if (!req.user.isAdmin) return res.status(403).json({ error: 'Accès interdit' });
     const users = await User.find().select('-password').sort({ createdAt: -1 });
     res.json(users);
   } catch (err) {
@@ -159,4 +184,4 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-module.exports = { router, auth };
+module.exports = { router, auth, adminAuth };

@@ -1,11 +1,44 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
-app.use(cors()); // Accepte toutes les origines pour le moment (facilite le déploiement)
-app.use(express.json());
+
+// Trust proxy if hosted on platforms like Render or Heroku
+app.set('trust proxy', 1);
+
+// Sécurité : En-têtes HTTP
+app.use(helmet());
+
+// Sécurité : Configuration CORS
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || '*', // Autorise tout par défaut, mais permet d'utiliser une variable d'env
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+
+// Sécurité : Limiteur de requêtes global
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // limite chaque IP à 1000 requêtes
+  message: { error: 'Trop de requêtes, veuillez réessayer plus tard.' }
+});
+app.use(limiter);
+
+// Parse JSON payload et limite la taille
+app.use(express.json({ limit: '10kb' }));
+
+// Sécurité : Contre les injections NoSQL
+app.use(mongoSanitize());
+
+// Sécurité : Contre les failles XSS
+app.use(xss());
 
 // Root Route for Render Health Check
 app.get('/', (req, res) => {

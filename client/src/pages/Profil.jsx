@@ -6,7 +6,7 @@ import axios from 'axios';
 import { getMyOrders, trackOrder, updateUser } from '../api/api';
 
 export default function Profil() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, updateUserInfo } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'info', 'reviews'
   
@@ -67,7 +67,7 @@ export default function Profil() {
   return (
     <section className="container" style={{ paddingTop: '6rem', minHeight: '80vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontFamily: 'var(--font-heading)' }}>Bonjour, {user.name.split(' ')[0]} 👋</h1>
+        <h1 style={{ fontFamily: 'var(--font-heading)' }}>Bonjour, {user.name ? user.name.split(' ')[0] : 'Client'} 👋</h1>
         <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', color: '#ef4444', borderColor: '#ef4444' }}>
           <FiLogOut /> Déconnexion
         </button>
@@ -185,11 +185,11 @@ export default function Profil() {
               <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: '1fr 1fr' }}>
                 <div className="form-group">
                   <label className="form-label" style={{ color: 'var(--text-muted)' }}>Nom Complet</label>
-                  <p style={{ fontSize: '1.1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '16px' }}>{user.name}</p>
+                  <p style={{ fontSize: '1.1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '16px' }}>{user.name || 'Non renseigné'}</p>
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ color: 'var(--text-muted)' }}>Email</label>
-                  <p style={{ fontSize: '1.1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '16px' }}>{user.email}</p>
+                  <p style={{ fontSize: '1.1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '16px' }}>{user.email || 'Non renseigné'}</p>
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ color: 'var(--text-muted)' }}>Téléphone</label>

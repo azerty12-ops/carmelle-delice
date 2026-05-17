@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const PromoCode = require('../models/PromoCode');
+const { adminAuth } = require('./users');
 
 // Get all promos
-router.get('/', async (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
   try {
     const promos = await PromoCode.find().sort({ createdAt: -1 });
     res.json(promos);
@@ -33,7 +34,7 @@ router.post('/validate', async (req, res) => {
 });
 
 // Create promo code
-router.post('/', async (req, res) => {
+router.post('/', adminAuth, async (req, res) => {
   try {
     const { code, discountPercentage } = req.body;
     if (!code || !discountPercentage) return res.status(400).json({ message: 'Données manquantes' });
@@ -53,7 +54,7 @@ router.post('/', async (req, res) => {
 });
 
 // Toggle status or delete (using delete for simplicity here)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     const promo = await PromoCode.findByIdAndDelete(req.params.id);
     if (!promo) return res.status(404).json({ message: 'Promo introuvable' });

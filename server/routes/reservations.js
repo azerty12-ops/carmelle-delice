@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Reservation = require('../models/Reservation');
+const { adminAuth } = require('./users');
 
 router.post('/', async (req, res) => {
   try {
@@ -10,7 +11,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
   try {
     const reservations = await Reservation.find().sort({ createdAt: -1 });
     res.json({ success: true, reservations });
@@ -19,7 +20,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', adminAuth, async (req, res) => {
   try {
     const reservation = await Reservation.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
     res.json({ success: true, reservation });
@@ -28,7 +29,7 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     await Reservation.findByIdAndDelete(req.params.id);
     res.json({ success: true });
