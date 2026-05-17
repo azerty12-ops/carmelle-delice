@@ -34,11 +34,47 @@ app.use(limiter);
 // Parse JSON payload et limite la taille
 app.use(express.json({ limit: '10kb' }));
 
-// Sécurité : Contre les injections NoSQL
-app.use(mongoSanitize());
+// Sécurité : Contre les injections NoSQL (compatible Express 5)
+const sanitizeNoSQL = (req, res, next) => {
+  const clean = (obj) => {
+    if (obj instanceof Object) {
+      for (const key in obj) {
+        if (key.startsWith('$') || key.startsWith('.')) {
+          delete obj[key];
+        } else if (typeof obj[key] === 'object') {
+          clean(obj[key]);
+        }
+      }
+    }
+  };
+  if (req.body) clean(req.body);
+  if (req.params) clean(req.params);
+  if (req.headers) clean(req.headers);
+  if (req.query) clean(req.query);
+  next();
+};
+app.use(sanitizeNoSQL);
 
-// Sécurité : Contre les failles XSS
-app.use(xss());
+// Sécurité : Contre les failles XSS (compatible Express 5)
+const sanitizeXSS = (req, res, next) => {
+  const clean = (obj) => {
+    if (obj instanceof Object) {
+      for (const key in obj) {
+        if (typeof obj[key] === 'string') {
+          obj[key] = obj[key].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        } else if (typeof obj[key] === 'object') {
+          clean(obj[key]);
+        }
+      }
+    }
+  };
+  if (req.body) clean(req.body);
+  if (req.params) clean(req.params);
+  if (req.headers) clean(req.headers);
+  if (req.query) clean(req.query);
+  next();
+};
+app.use(sanitizeXSS);
 
 // Root Route for Render Health Check
 app.get('/', (req, res) => {
