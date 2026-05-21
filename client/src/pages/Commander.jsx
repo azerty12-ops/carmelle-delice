@@ -4,32 +4,22 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder, validatePromo, trackOrder } from '../api/api';
 import ScrollReveal from '../components/ScrollReveal';
-import { useAuth } from '../context/AuthContext';
+
 
 export default function Commander() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalPrice, showToast } = useCart();
-  const { user } = useAuth();
+
   const [formData, setFormData] = useState({
-    name: user?.name || '', phone: user?.phone || '', address: user?.addresses?.[0] || '', notes: '',
+    name: '', phone: '', address: '', notes: '',
     deliveryDate: 'Aujourd\'hui', deliveryTime: 'Dès que possible',
     paymentMethod: 'cash'
   });
   
-  useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: prev.name || user.name || '',
-        phone: prev.phone || user.phone || '',
-        address: prev.address || user.addresses?.[0] || ''
-      }));
-    }
-  }, [user]);
+
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0); // percentage
   const [applyingPromo, setApplyingPromo] = useState(false);
-  const [usePoints, setUsePoints] = useState(false);
-  const [pointsToUse, setPointsToUse] = useState(0);
+
 
   const [sending, setSending] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
@@ -69,7 +59,7 @@ export default function Commander() {
 
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
   const discountAmount = Math.floor(totalPrice * (discount / 100));
-  const pointsDiscount = (usePoints && (user?.points || 0) >= 5000) ? 1000 : 0;
+  const pointsDiscount = 0;
   const finalPrice = Math.max(0, totalPrice - discountAmount - pointsDiscount);
 
   const handleApplyPromo = async () => {
@@ -170,7 +160,7 @@ export default function Commander() {
       promoCode: discount > 0 ? promoCode : null,
       discountAmount,
       locationUrl,
-      pointsUsed: usePoints ? 5000 : 0
+      pointsUsed: 0
     };
 
     try {
@@ -382,19 +372,6 @@ export default function Commander() {
               </div>
             </ScrollReveal>
           ) : (
-            !user ? (
-                    <div className="glass-card login-required-card" style={{ padding: '3rem', textAlign: 'center', margin: '2rem 0' }}>
-                      <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>🔐</div>
-                      <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: '1rem' }}>Connexion Requise</h2>
-                      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: 1.7, maxWidth: '500px', margin: '0 auto 2rem' }}>
-                        Pour commander sur Carmel Délice et bénéficier de votre programme de fidélité, vous devez être inscrit.
-                      </p>
-                      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <Link to="/auth" className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>Se Connecter / S'inscrire</Link>
-                        <Link to="/menu" className="btn btn-outline" style={{ padding: '0.8rem 2rem' }}>Retour au Menu</Link>
-                      </div>
-                    </div>
-                  ) : (
                     <div className="order-layout">
                       {/* CART RECAP */}
                       <ScrollReveal>
@@ -445,25 +422,7 @@ export default function Commander() {
                             </div>
                           </div>
 
-                          {/* LOYALTY POINTS */}
-                          {user && user.points >= 5000 && (
-                            <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(212,168,67,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(212,168,67,0.2)' }}>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--gold-400)' }}>
-                                <input 
-                                  type="checkbox" 
-                                  checked={usePoints} 
-                                  onChange={(e) => setUsePoints(e.target.checked)}
-                                  style={{ width: '18px', height: '18px', accentColor: 'var(--gold-primary)' }}
-                                />
-                                Utiliser mes points ({user.points} pts dispo)
-                              </label>
-                              {usePoints && (
-                                <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
-                                  Réduction appliquée : <strong>-{pointsDiscount.toLocaleString()} F</strong>
-                                </p>
-                              )}
-                            </div>
-                          )}
+
 
                           <div className="order-total" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -476,12 +435,7 @@ export default function Commander() {
                                 <span style={{ fontSize: '1rem' }}>-{discountAmount.toLocaleString()} F</span>
                               </div>
                             )}
-                            {pointsDiscount > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--gold-400)' }}>
-                                <span style={{ fontSize: '1rem' }}>Points de fidélité</span>
-                                <span style={{ fontSize: '1rem' }}>-{pointsDiscount.toLocaleString()} F</span>
-                              </div>
-                            )}
+
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
                               <span>Total à payer</span>
                               <span className="order-total-price">{finalPrice.toLocaleString()} F</span>
@@ -522,22 +476,7 @@ export default function Commander() {
                       {locationUrl && <p style={{ fontSize: '0.85rem', color: '#10b981', marginTop: '0.5rem', textAlign: 'center' }}>✓ Position GPS enregistrée pour la livraison</p>}
                     </div>
 
-                    {user && user.addresses?.length > 0 && (
-                      <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                        <label className="form-label">Sélectionner une adresse enregistrée</label>
-                        <select className="form-input" onChange={e => {
-                          if (e.target.value) {
-                            setFormData({ ...formData, address: e.target.value });
-                            setShowAddress(true);
-                          }
-                        }}>
-                          <option value="">-- Choisir une adresse --</option>
-                          {user.addresses.map((addr, i) => (
-                            <option key={i} value={addr}>{addr}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+
 
                     <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', marginBottom: showAddress ? '0' : '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
                       <input type="checkbox" id="showAddressCheckbox" checked={showAddress} onChange={(e) => setShowAddress(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--gold-primary)' }} />
@@ -619,7 +558,6 @@ export default function Commander() {
                   </div>
                 </ScrollReveal>
               </div>
-            )
           )}
         </div>
       </section>

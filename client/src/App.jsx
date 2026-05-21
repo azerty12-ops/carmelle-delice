@@ -1,9 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
-import { AuthProvider } from './context/AuthContext';
-import Auth from './pages/Auth';
-import Profil from './pages/Profil';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -14,7 +11,7 @@ import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import PromotionalBanner from './components/PromotionalBanner';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
-import { FiHome, FiGrid, FiShoppingBag, FiUser } from 'react-icons/fi';
+import { FiHome, FiGrid, FiShoppingBag, FiPhone } from 'react-icons/fi';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -51,8 +48,8 @@ function BottomNav() {
         </div>
         <span>Panier</span>
       </Link>
-      <Link to="/profil" className={`bottom-nav-item ${location.pathname === '/profil' ? 'active' : ''}`}>
-        <FiUser /> <span>Profil</span>
+      <Link to="/contact" className={`bottom-nav-item ${location.pathname === '/contact' ? 'active' : ''}`}>
+        <FiPhone /> <span>Contact</span>
       </Link>
     </nav>
   );
@@ -78,8 +75,7 @@ function Layout() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/commander" element={<Commander />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profil" element={<Profil />} />
+
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
@@ -93,12 +89,12 @@ function Layout() {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <>
       <CartProvider>
         <BrowserRouter>
           <Layout />
         </BrowserRouter>
       </CartProvider>
-    </AuthProvider>
+    </>
   );
 }

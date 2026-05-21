@@ -1,9 +1,6 @@
-import { useAuth } from '../context/AuthContext';
 import { FiGift, FiTruck } from 'react-icons/fi';
 
 export default function PromotionalBanner() {
-  const { user } = useAuth();
-  
   return (
     <div className="promo-banner">
       <div className="promo-track">
@@ -11,23 +8,17 @@ export default function PromotionalBanner() {
           <FiTruck /> 🚚 Livraison partout à Abidjan — Commandez avant 18h pour le jour même !
         </div>
         <div className="promo-item">
-          <FiGift /> 🎁 Programme Fidélité : Accumulez des points à chaque commande !
+          <FiGift /> 🎁 Packs Canapés dès 6 500 F — Box Découverte, Moyenne et VIP !
         </div>
-        {user ? (
-          <div className="promo-item promo-loyalty">
-            ⭐ Bonjour {user.name} ! Vous avez <strong>{user.points || 0} points</strong>. Plus que {Math.max(0, 1000 - (user.points || 0))} pts pour 1000F de remise !
-          </div>
-        ) : (
-          <div className="promo-item">
-            ✨ Connectez-vous pour profiter de -10% sur votre première commande !
-          </div>
-        )}
+        <div className="promo-item">
+          ✨ Contactez-nous sur WhatsApp pour des commandes personnalisées !
+        </div>
         {/* Duplicate for infinite loop */}
         <div className="promo-item">
           <FiTruck /> 🚚 Livraison partout à Abidjan — Commandez avant 18h pour le jour même !
         </div>
         <div className="promo-item">
-          <FiGift /> 🎁 Programme Fidélité : Accumulez des points à chaque commande !
+          <FiGift /> 🎁 Packs Canapés dès 6 500 F — Box Découverte, Moyenne et VIP !
         </div>
       </div>
 
@@ -53,12 +44,6 @@ export default function PromotionalBanner() {
           align-items: center;
           gap: 10px;
           padding: 0 4rem;
-        }
-        .promo-loyalty {
-          color: var(--navy-800);
-          background: rgba(255,255,255,0.2);
-          border-radius: 20px;
-          padding: 2px 15px;
         }
         @keyframes marquee {
           0% { transform: translateX(0); }
