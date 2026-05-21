@@ -71,7 +71,7 @@ function Layout() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/notre-histoire" element={<Histoire />} />
+          <Route path="/histoire" element={<Histoire />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/commander" element={<Commander />} />
           <Route path="/contact" element={<Contact />} />
