@@ -23,7 +23,7 @@ export default function Footer() {
             <h4>Navigation</h4>
             <ul>
               <li><Link to="/">Accueil</Link></li>
-              <li><Link to="/histoire">Notre Histoire</Link></li>
+              <li><Link to="/notre-histoire">Notre Histoire</Link></li>
               <li><Link to="/menu">Menu</Link></li>
               <li><Link to="/contact">Contact</Link></li>
             </ul>

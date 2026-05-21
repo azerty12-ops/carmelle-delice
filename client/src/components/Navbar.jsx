@@ -21,7 +21,7 @@ export default function Navbar() {
 
   const links = [
     { to: '/', label: 'Accueil' },
-    { to: '/histoire', label: 'Notre Histoire' },
+    { to: '/notre-histoire', label: 'Notre Histoire' },
     { to: '/menu', label: 'Menu' },
     { to: '/contact', label: 'Contact' },
   ];
